@@ -11,180 +11,153 @@ const PropertyDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [saved, setSaved] = useState(false);
+  const [media, setMedia] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const user = JSON.parse(localStorage.getItem('user'));
-
-  const sampleProperties = [
-    {
-      _id: '1',
-      title: 'Modern Apartment in Westlands',
-      location: 'Westlands, Nairobi',
-      price: 55000,
-      description: 'Beautiful modern apartment in the heart of Westlands with amazing city views, fully furnished with all amenities included. Features include hardwood floors, modern kitchen, in-unit laundry and a private balcony overlooking the city skyline. Building amenities include a fitness center, rooftop deck, and 24-hour security.',
-      bedrooms: 2,
-      bathrooms: 1,
-      propertyType: 'Apartment',
-      images: [
-        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600',
-        'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600',
-        'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600',
-      ],
-      landlord: { name: 'James Mwangi', email: 'james@email.com', phone: '0712 345 678' },
-      amenities: ['WiFi', 'Parking', 'Gym', 'Laundry', 'Security', 'Water'],
-      available: true,
-      createdAt: '2025-01-15',
-    },
-    {
-      _id: '2',
-      title: 'Spacious Family Home in Karen',
-      location: 'Karen, Nairobi',
-      price: 120000,
-      description: 'Spacious family house in the quiet leafy suburb of Karen with a large garden, modern kitchen and ample parking. This charming home features an open floor plan, updated bathrooms, a two-car garage, and a beautifully landscaped yard perfect for entertaining.',
-      bedrooms: 4,
-      bathrooms: 3,
-      propertyType: 'House',
-      images: [
-        'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600',
-        'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600',
-      ],
-      landlord: { name: 'Grace Njoroge', email: 'grace@email.com', phone: '0723 456 789' },
-      amenities: ['Parking', 'Garden', 'Laundry', 'Pet Friendly', 'Security', 'Borehole'],
-      available: true,
-      createdAt: '2025-01-20',
-    },
-    {
-      _id: '3',
-      title: 'Luxury Apartment in Kilimani',
-      location: 'Kilimani, Nairobi',
-      price: 85000,
-      description: 'Stunning luxury apartment in Kilimani with rooftop pool, gym and premium finishes throughout. Enjoy city views, marble countertops, floor-to-ceiling windows, and a spa-like master bathroom.',
-      bedrooms: 3,
-      bathrooms: 2,
-      propertyType: 'Apartment',
-      images: [
-        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600',
-        'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=600',
-      ],
-      landlord: { name: 'Peter Kamau', email: 'peter@email.com', phone: '0734 567 890' },
-      amenities: ['Pool', 'WiFi', 'Gym', 'Security', 'Rooftop', 'Backup Generator'],
-      available: true,
-      createdAt: '2025-02-01',
-    },
-    {
-      _id: '4',
-      title: 'Studio Apartment in Roysambu',
-      location: 'Roysambu, Nairobi',
-      price: 18000,
-      description: 'Affordable studio apartment perfect for students and young professionals. Close to TRM Mall and public transport. Features a kitchenette, built-in closet, and shared laundry facilities.',
-      bedrooms: 1,
-      bathrooms: 1,
-      propertyType: 'Studio',
-      images: [
-        'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600',
-      ],
-      landlord: { name: 'Sarah Akinyi', email: 'sarah@email.com', phone: '0745 678 901' },
-      amenities: ['WiFi', 'Laundry', 'Water', 'Security'],
-      available: true,
-      createdAt: '2025-02-10',
-    },
-    {
-      _id: '5',
-      title: 'Beachfront Villa in Nyali',
-      location: 'Nyali, Mombasa',
-      price: 150000,
-      description: 'Exclusive beachfront villa in Nyali with ocean views, private pool and rooftop terrace. This one-of-a-kind residence features designer finishes, a gourmet kitchen, and smart home technology throughout.',
-      bedrooms: 4,
-      bathrooms: 3,
-      propertyType: 'House',
-      images: [
-        'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=600',
-        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600',
-      ],
-      landlord: { name: 'Hassan Omar', email: 'hassan@email.com', phone: '0756 789 012' },
-      amenities: ['Pool', 'Rooftop', 'Smart Home', 'Security', 'Parking', 'Ocean View'],
-      available: true,
-      createdAt: '2025-02-15',
-    },
-    {
-      _id: '6',
-      title: 'Cozy Cottage in Kutus',
-      location: 'Kutus, Kirinyaga',
-      price: 12000,
-      description: 'Charming cottage in Kutus town, Kirinyaga County. Close to local amenities, schools and public transport. Features a wrap-around porch, updated kitchen and a small garden.',
-      bedrooms: 2,
-      bathrooms: 1,
-      propertyType: 'House',
-      images: [
-        'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=600',
-      ],
-      landlord: { name: 'Mary Wanjiku', email: 'mary@email.com', phone: '0767 890 123' },
-      amenities: ['Garden', 'Parking', 'Water', 'Security'],
-      available: true,
-      createdAt: '2025-02-20',
-    },
-    {
-      _id: '7',
-      title: 'Modern Flat in Milimani',
-      location: 'Milimani, Kisumu',
-      price: 30000,
-      description: 'Modern flat in the upmarket Milimani area of Kisumu with lake views, spacious rooms and a secure compound with 24hr security. Close to Kisumu CBD and major amenities.',
-      bedrooms: 2,
-      bathrooms: 1,
-      propertyType: 'Apartment',
-      images: [
-        'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600',
-      ],
-      landlord: { name: 'David Odhiambo', email: 'david@email.com', phone: '0778 901 234' },
-      amenities: ['WiFi', 'Security', 'Parking', 'Water', 'Lake View'],
-      available: true,
-      createdAt: '2025-03-01',
-    },
-    {
-      _id: '8',
-      title: 'Townhouse in Ruaka',
-      location: 'Ruaka, Kiambu',
-      price: 65000,
-      description: 'Well-maintained townhouse in Ruaka with easy access to Nairobi via the Northern Bypass. Features a small garden, 2 parking spaces, backup generator and borehole water.',
-      bedrooms: 3,
-      bathrooms: 2,
-      propertyType: 'House',
-      images: [
-        'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600',
-        'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600',
-      ],
-      landlord: { name: 'John Kariuki', email: 'john@email.com', phone: '0789 012 345' },
-      amenities: ['Parking', 'Garden', 'Backup Generator', 'Borehole', 'Security'],
-      available: true,
-      createdAt: '2025-03-05',
-    },
-  ];
+  const isOwner = user && property && (user.role === 'admin' || user.id === property.landlord?._id || user.id === property.landlord);
 
   useEffect(() => {
-    const fetchProperty = async () => {
-      setLoading(true);
-      try {
-        const response = await API.get(`/properties/${id}`);
-        setProperty(response.data);
-      } catch (err) {
-        const found = sampleProperties.find((p) => p._id === id);
-        setProperty(found || null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProperty();
-    setSaved(isPropertySaved(id));
-    // eslint-disable-next-line
+    fetchData();
   }, [id]);
 
-  const handleSaveToggle = () => {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch property details
+      const propertyRes = await API.get(`/houses/${id}`, {
+        headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+      });
+      setProperty(propertyRes.data);
+      
+      // Fetch media (images and videos)
+      await fetchMedia();
+      
+      setSaved(await isPropertySaved(id));
+    } catch (err) {
+      console.error('Error fetching property:', err);
+      setProperty(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMedia = async () => {
+    try {
+      const mediaRes = await API.get(`/media/property/${id}`);
+      setMedia(mediaRes.data);
+    } catch (err) {
+      console.log('No media found for this property');
+      setMedia([]);
+    }
+  };
+
+  const handleSaveToggle = async () => {
     if (saved) {
-      removeSavedProperty(property._id);
+      await removeSavedProperty(property._id);
       setSaved(false);
     } else {
-      saveProperty(property);
+      await saveProperty(property);
       setSaved(true);
     }
   };
+
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    setUploading(true);
+    setUploadProgress(0);
+    
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await API.post(`/media/upload/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        }
+      });
+      
+      // Refresh media list
+      await fetchMedia();
+      // Refresh property to update images array
+      const propertyRes = await API.get(`/houses/${id}`);
+      setProperty(propertyRes.data);
+      
+      alert(`Successfully uploaded ${response.data.files.length} file(s)!`);
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload files: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+      e.target.value = '';
+    }
+  };
+
+  const handleDeleteMedia = async (mediaId, mediaType) => {
+    if (!window.confirm(`Are you sure you want to delete this ${mediaType}? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      await API.delete(`/media/${mediaId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      // Refresh media list
+      await fetchMedia();
+      // Refresh property to update images array
+      const propertyRes = await API.get(`/houses/${id}`);
+      setProperty(propertyRes.data);
+      
+      alert(`${mediaType} deleted successfully!`);
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Failed to delete media: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const getDisplayLocation = () => {
+    if (property?.address) return property.address;
+    if (property?.location?.coordinates) {
+      return property.location.coordinates[1] + ', ' + property.location.coordinates[0];
+    }
+    if (typeof property?.location === 'string') return property.location;
+    return 'Location not specified';
+  };
+
+  const getMapLocation = () => {
+    if (property?.address) return property.address;
+    if (property?.location?.coordinates) {
+      return property.location.coordinates[1] + ', ' + property.location.coordinates[0];
+    }
+    if (typeof property?.location === 'string') return property.location;
+    return 'Nairobi, Kenya';
+  };
+
+  // Separate images and videos from media
+  const images = media.filter(m => m.mediaType === 'image');
+  const videos = media.filter(m => m.mediaType === 'video');
+  
+  // Also check property.images array
+  const propertyImages = property?.images?.filter(img => !img.includes('cloudinary.com/demo')) || [];
+  const allImages = [...propertyImages, ...images.map(i => i.url)];
+  
+  // Get video URL from media or property
+  const videoUrl = videos.length > 0 ? videos[0].url : (property?.videoUrl || null);
 
   if (loading) return <div className="loading">Loading property details...</div>;
 
@@ -192,7 +165,7 @@ const PropertyDetail = () => {
     return (
       <div className="not-found">
         <h2>Property Not Found</h2>
-        <p>The property you're looking for doesn't exist.</p>
+        <p>The property you are looking for does not exist.</p>
         <button onClick={() => navigate('/properties')} className="btn btn-primary">
           Back to Properties
         </button>
@@ -200,39 +173,150 @@ const PropertyDetail = () => {
     );
   }
 
+  const displayLocation = getDisplayLocation();
+  const mapLocation = getMapLocation();
+  const detailSaveBtnClass = 'detail-save-btn ' + (saved ? 'saved' : '');
+  const badgeClass = 'badge';
+  const badgeAvailableClass = 'badge badge-available';
+  const amenityTagClass = 'amenity-tag';
+  const thumbnailClass = (index) => 'thumbnail ' + (index === activeImage ? 'active-thumbnail' : '');
+  const btnFullClass = 'btn btn-full ' + (saved ? 'btn-unsave' : 'btn-save');
+  const btnPrimaryFullClass = 'btn btn-primary btn-full';
+  const btnSecondaryFullClass = 'btn btn-secondary btn-full';
+
+  const getImageUrl = (imageIndex) => {
+    if (allImages.length > 0 && allImages[imageIndex]) {
+      return allImages[imageIndex];
+    }
+    return 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600';
+  };
+
   return (
     <div className="property-detail-page">
+      {/* Upload Section for Owner */}
+      {isOwner && (
+        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f0f8ff', borderRadius: '8px', border: '1px dashed #4CAF50' }}>
+          <h3>📤 Manage Media</h3>
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div>
+              <label style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: '#4CAF50', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>
+                📸 Upload Images/Videos
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            </div>
+            {uploading && (
+              <div style={{ flex: 1 }}>
+                <progress value={uploadProgress} max="100" style={{ width: '100%' }} />
+                <span style={{ marginLeft: '10px' }}>{uploadProgress}%</span>
+              </div>
+            )}
+          </div>
+          <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
+            Supported formats: JPG, PNG, GIF, MP4, MOV, WebM (Max 10 files per upload)
+          </p>
+        </div>
+      )}
+
+      {/* Image Gallery */}
       <div className="detail-gallery">
-        <div className="main-image">
+        <div className="main-image" style={{ position: 'relative' }}>
           <img
-            src={property.images && property.images.length > 0 ? property.images[activeImage] : 'https://via.placeholder.com/600x400?text=No+Image'}
+            src={getImageUrl(activeImage)}
             alt={property.title}
+            onError={(e) => {
+              e.target.src = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600';
+            }}
           />
-          <button className={`detail-save-btn ${saved ? 'saved' : ''}`} onClick={handleSaveToggle}>
+          <button className={detailSaveBtnClass} onClick={handleSaveToggle}>
             {saved ? '❤️ Saved' : '🤍 Save'}
           </button>
         </div>
-        {property.images && property.images.length > 1 && (
+        {allImages.length > 1 && (
           <div className="thumbnail-row">
-            {property.images.map((img, index) => (
-              <img
-                key={index}
-                src={img}
-                alt={`${property.title} ${index + 1}`}
-                className={`thumbnail ${index === activeImage ? 'active-thumbnail' : ''}`}
-                onClick={() => setActiveImage(index)}
-              />
+            {allImages.map((img, index) => (
+              <div key={index} style={{ position: 'relative', display: 'inline-block' }}>
+                <img
+                  src={img}
+                  alt={property.title + ' ' + (index + 1)}
+                  className={thumbnailClass(index)}
+                  onClick={() => setActiveImage(index)}
+                />
+                {isOwner && images[index] && (
+                  <button
+                    onClick={() => handleDeleteMedia(images[index]._id, 'image')}
+                    style={{
+                      position: 'absolute',
+                      top: '-5px',
+                      right: '-5px',
+                      background: 'red',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      lineHeight: '1'
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Video Section */}
+      {videos.length > 0 && (
+        <div className="detail-section">
+          <h3>🎥 Property Video Tour</h3>
+          {videos.map((video, idx) => (
+            <div key={video._id} style={{ marginBottom: '20px', position: 'relative' }}>
+              <video controls width="100%" style={{ borderRadius: '8px' }} controlsList="nodownload">
+                <source src={video.url} type="video/mp4" />
+                <source src={video.url} type="video/webm" />
+                Your browser does not support the video tag.
+              </video>
+              {isOwner && (
+                <button
+                  onClick={() => handleDeleteMedia(video._id, 'video')}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: 'red',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '30px',
+                    height: '30px',
+                    cursor: 'pointer',
+                    fontSize: '16px'
+                  }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="detail-content">
         <div className="detail-main">
           <div className="detail-header">
             <div>
               <h1>{property.title}</h1>
-              <p className="detail-location">📍 {property.location}</p>
+              <p className="detail-location">📍 {displayLocation}</p>
             </div>
             <div className="detail-price">
               <h2>KES {property.price?.toLocaleString()}</h2>
@@ -241,10 +325,10 @@ const PropertyDetail = () => {
           </div>
 
           <div className="detail-badges">
-            <span className="badge">{property.propertyType}</span>
-            <span className="badge">🛏 {property.bedrooms} Bedrooms</span>
-            <span className="badge">🚿 {property.bathrooms} Bathrooms</span>
-            {property.available && <span className="badge badge-available">✅ Available</span>}
+            <span className={badgeClass}>{property.propertyType || 'Property'}</span>
+            <span className={badgeClass}>🛏 {property.bedrooms} Bedrooms</span>
+            <span className={badgeClass}>🚿 {property.bathrooms} Bathrooms</span>
+            {property.status === 'available' && <span className={badgeAvailableClass}>✅ Available</span>}
           </div>
 
           <div className="detail-section">
@@ -257,31 +341,12 @@ const PropertyDetail = () => {
               <h3>Amenities</h3>
               <div className="amenities-grid">
                 {property.amenities.map((amenity, index) => (
-                  <span key={index} className="amenity-tag">✓ {amenity}</span>
+                  <span key={index} className={amenityTagClass}>✓ {amenity}</span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Video Tour */}
-          {property.videoUrl && (
-            <div className="detail-section">
-              <h3>🎥 Video Tour</h3>
-              <div className="video-tour-container">
-                {property.videoUrl.includes('youtube') || property.videoUrl.includes('youtu.be') ? (
-                  <iframe width="100%" height="360" src={property.videoUrl} title="Property Video Tour"
-                    frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
-                ) : (
-                  <video controls width="100%" style={{ borderRadius: '8px' }}>
-                    <source src={property.videoUrl} />
-                    Your browser does not support the video tag.
-                  </video>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Google Maps */}
           <div className="detail-section">
             <h3>📍 Location & Navigation</h3>
             <div className="maps-container">
@@ -291,13 +356,13 @@ const PropertyDetail = () => {
                 height="300"
                 style={{ border: 0, borderRadius: '8px' }}
                 loading="lazy"
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(property.location)}&output=embed`}
+                src={'https://maps.google.com/maps?q=' + encodeURIComponent(mapLocation) + '&output=embed'}
               ></iframe>
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`}
+                href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapLocation)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-secondary btn-full"
+                className={btnSecondaryFullClass}
                 style={{ marginTop: '10px', display: 'block', textAlign: 'center' }}
               >
                 🗺️ Open in Google Maps
@@ -313,32 +378,40 @@ const PropertyDetail = () => {
               <div className="landlord-info">
                 <p className="landlord-name">👤 {property.landlord.name}</p>
                 <p>📧 {property.landlord.email}</p>
-                <p>📞 {property.landlord.phone}</p>
+                <p>📞 {property.landlord.phone || 'Not provided'}</p>
               </div>
             )}
             {user ? (
               <>
-                <button className="btn btn-primary btn-full" onClick={() => navigate(`/apply/${property._id}`)}>
+                <button className={btnPrimaryFullClass} onClick={() => navigate(`/apply/${property._id}`)}>
                   Apply Now
                 </button>
                 <button
-                  className={`btn btn-full ${saved ? 'btn-unsave' : 'btn-save'}`}
+                  className={btnFullClass}
                   onClick={handleSaveToggle}
                   style={{ marginTop: '10px' }}
                 >
                   {saved ? '❤️ Remove from Saved' : '🤍 Save Property'}
                 </button>
+                {isOwner && (
+                  <button
+                    onClick={() => navigate(`/edit-property/${property._id}`)}
+                    style={{ width: '100%', marginTop: '10px', padding: '10px', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    ✏️ Edit Property Details
+                  </button>
+                )}
               </>
             ) : (
               <div>
                 <p className="login-prompt">Login to apply for this property</p>
-                <button className="btn btn-primary btn-full" onClick={() => navigate('/login')}>
+                <button className={btnPrimaryFullClass} onClick={() => navigate('/login')}>
                   Login to Apply
                 </button>
               </div>
             )}
           </div>
-          <button className="btn btn-secondary btn-full" onClick={() => navigate('/properties')}>
+          <button className={btnSecondaryFullClass} onClick={() => navigate('/properties')}>
             ← Back to Properties
           </button>
         </div>

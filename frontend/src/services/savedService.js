@@ -1,31 +1,38 @@
-// Get saved properties from localStorage
-export const getSavedProperties = () => {
-  const saved = localStorage.getItem('savedProperties');
-  return saved ? JSON.parse(saved) : [];
+﻿import API from './api';
+
+// Save property
+export const saveProperty = async (property) => {
+    const propertyId = property._id || property;
+    const response = await API.post('/saved', { propertyId });
+    return response.data;
 };
 
-// Save a property
-export const saveProperty = (property) => {
-  const saved = getSavedProperties();
-  // Check if already saved
-  if (saved.find((p) => p._id === property._id)) {
-    return false; // Already saved
-  }
-  saved.push(property);
-  localStorage.setItem('savedProperties', JSON.stringify(saved));
-  return true;
+// Get saved properties
+export const getSavedProperties = async () => {
+    try {
+        const response = await API.get('/saved');
+        return response.data;
+    } catch (error) {
+        if (error.response?.status === 401) {
+            // Not logged in - return empty array, don't show error
+            return [];
+        }
+        throw error;
+    }
 };
 
-// Remove a saved property
-export const removeSavedProperty = (propertyId) => {
-  const saved = getSavedProperties();
-  const updated = saved.filter((p) => p._id !== propertyId);
-  localStorage.setItem('savedProperties', JSON.stringify(updated));
-  return updated;
+// Remove saved property
+export const removeSavedProperty = async (propertyId) => {
+    const response = await API.delete(/saved/);
+    return response.data;
 };
 
 // Check if a property is saved
-export const isPropertySaved = (propertyId) => {
-  const saved = getSavedProperties();
-  return saved.some((p) => p._id === propertyId);
+export const isPropertySaved = async (propertyId) => {
+    try {
+        const savedProperties = await getSavedProperties();
+        return savedProperties.some(saved => saved.property?._id === propertyId);
+    } catch (error) {
+        return false;
+    }
 };

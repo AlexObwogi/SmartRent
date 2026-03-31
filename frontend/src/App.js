@@ -16,6 +16,7 @@ import ApplyProperty from './pages/ApplyProperty';
 import MyApplications from './pages/MyApplications';
 import SavedProperties from './pages/SavedProperties';
 import NotFound from './pages/NotFound';
+import MyProperties from './pages/MyProperties';
 import './App.css';
 
 function App() {
@@ -83,6 +84,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MyApplications />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-properties"
+              element={
+                <ProtectedRoute>
+                  <MyProperties />
                 </ProtectedRoute>
               }
             />

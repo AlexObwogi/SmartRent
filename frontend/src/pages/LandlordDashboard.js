@@ -1,189 +1,155 @@
-import React, { useState, useEffect } from 'react';
-import API from '../services/api';
-import { Link, useNavigate } from 'react-router-dom';
-import Notification from '../components/Notification';
-import ConfirmModal from '../components/ConfirmModal';
+﻿import React, { useState, useEffect } from 'react';
+import { getMyProperties, deleteProperty } from '../services/propertyService';
+import { getLandlordApplications, updateApplicationStatus } from '../services/landlordService';
 
 const LandlordDashboard = () => {
-  const [properties, setProperties] = useState([]);
-  const [applications, setApplications] = useState([]);
-  const [activeTab, setActiveTab] = useState('properties');
-  const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
-  const user = JSON.parse(localStorage.getItem('user'));
-  const navigate = useNavigate();
+    const [properties, setProperties] = useState([]);
+    const [applications, setApplications] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  const sampleProperties = [
-    { _id: '1', title: 'Modern Apartment in Westlands', location: 'Westlands, Nairobi', price: 55000, bedrooms: 2, bathrooms: 1, propertyType: 'Apartment' },
-    { _id: '2', title: 'Spacious Family Home in Karen', location: 'Karen, Nairobi', price: 120000, bedrooms: 4, bathrooms: 2, propertyType: 'House' },
-  ];
+    useEffect(() => {
+        fetchData();
+    }, []);
 
-  const sampleApplications = [
-    { _id: 'a1', propertyTitle: 'Modern Apartment in Westlands', applicantName: 'Alice Johnson', applicantEmail: 'alice@email.com', phone: '555-1234', moveInDate: '2025-05-01', employmentStatus: 'employed', monthlyIncome: 85000, occupants: '2', pets: 'no', message: 'We would love to live here!', status: 'pending', createdAt: '2025-04-10' },
-    { _id: 'a2', propertyTitle: 'Spacious Family Home in Karen', applicantName: 'Bob Williams', applicantEmail: 'bob@email.com', phone: '555-5678', moveInDate: '2025-06-01', employmentStatus: 'self-employed', monthlyIncome: 120000, occupants: '3', pets: 'dog', message: 'We are a quiet family.', status: 'pending', createdAt: '2025-04-12' },
-    { _id: 'a3', propertyTitle: 'Modern Apartment in Westlands', applicantName: 'Carol Davis', applicantEmail: 'carol@email.com', phone: '555-9012', moveInDate: '2025-05-15', employmentStatus: 'employed', monthlyIncome: 75000, occupants: '1', pets: 'no', message: 'Professional looking for a long-term stay.', status: 'approved', createdAt: '2025-03-28' },
-  ];
-
-  useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      try {
-        const res = await API.get('/properties/my-properties');
-        setProperties(res.data.properties || res.data);
-      } catch {
-        setProperties(sampleProperties);
-      }
-      try {
-        const res = await API.get('/applications/landlord-applications');
-        setApplications(res.data.applications || res.data);
-      } catch {
-        setApplications(sampleApplications);
-      }
-      setLoading(false);
+        try {
+            setLoading(true);
+            setError(null);
+            
+            const [props, apps] = await Promise.all([
+                getMyProperties(),
+                getLandlordApplications()
+            ]);
+            
+            setProperties(props || []);
+            setApplications(apps || []);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            setError(error.response?.data?.message || 'Failed to load data');
+        } finally {
+            setLoading(false);
+        }
     };
-    fetchData();
-    // eslint-disable-next-line
-  }, []);
 
-  const handleDeleteClick = (id) => { setDeleteId(id); setShowModal(true); };
+    const handleDeleteProperty = async (id) => {
+        if (window.confirm('Are you sure you want to delete this property?')) {
+            try {
+                await deleteProperty(id);
+                const updatedProps = await getMyProperties();
+                setProperties(updatedProps);
+            } catch (error) {
+                console.error('Error deleting property:', error);
+                alert('Failed to delete property');
+            }
+        }
+    };
 
-  const handleConfirmDelete = async () => {
-    try { await API.delete(`/properties/${deleteId}`); } catch {}
-    setProperties(properties.filter((p) => p._id !== deleteId));
-    setShowModal(false);
-    setDeleteId(null);
-    setNotification({ message: 'Property deleted successfully!', type: 'success' });
-  };
+    const handleStatusUpdate = async (applicationId, newStatus) => {
+        try {
+            await updateApplicationStatus(applicationId, newStatus);
+            const updatedApps = await getLandlordApplications();
+            setApplications(updatedApps);
+        } catch (error) {
+            console.error('Error updating status:', error);
+            alert('Failed to update application status');
+        }
+    };
 
-  const handleApplicationStatus = async (appId, status) => {
-    try { await API.put(`/applications/${appId}/status`, { status }); } catch {}
-    setApplications(applications.map((a) => a._id === appId ? { ...a, status } : a));
-    setNotification({ message: `Application ${status} successfully!`, type: status === 'approved' ? 'success' : 'info' });
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'pending': return <span className="status-badge status-pending">⏳ Pending</span>;
-      case 'approved': return <span className="status-badge status-approved">✅ Approved</span>;
-      case 'rejected': return <span className="status-badge status-rejected">❌ Rejected</span>;
-      default: return <span className="status-badge">{status}</span>;
+    if (loading) {
+        return <div style={{ padding: '20px', textAlign: 'center' }}>Loading dashboard...</div>;
     }
-  };
 
-  const pendingCount = applications.filter((a) => a.status === 'pending').length;
+    if (error) {
+        return <div style={{ padding: '20px', color: 'red' }}>Error: {error}</div>;
+    }
 
-  return (
-    <div className="dashboard-container">
-      {notification && <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />}
-      {showModal && (
-        <ConfirmModal
-          title="Delete Property"
-          message="Are you sure you want to delete this property? This action cannot be undone."
-          onConfirm={handleConfirmDelete}
-          onCancel={() => { setShowModal(false); setDeleteId(null); }}
-        />
-      )}
-
-      <div className="dashboard-header">
-        <div>
-          <h1>🏠 Landlord Dashboard</h1>
-          <p>Welcome back, {user?.name || 'Landlord'}!</p>
-        </div>
-        <Link to="/create-property" className="btn btn-primary">+ Add New Property</Link>
-      </div>
-
-      <div className="dashboard-stats">
-        <div className="stat-card"><h3>{properties.length}</h3><p>Properties</p></div>
-        <div className="stat-card"><h3>{applications.length}</h3><p>Applications</p></div>
-        <div className="stat-card"><h3>{pendingCount}</h3><p>Pending Reviews</p></div>
-        <div className="stat-card"><h3>{applications.filter(a => a.status === 'approved').length}</h3><p>Approved</p></div>
-      </div>
-
-      <div className="dashboard-tabs">
-        <button className={`dashboard-tab ${activeTab === 'properties' ? 'active' : ''}`} onClick={() => setActiveTab('properties')}>
-          🏠 My Properties ({properties.length})
-        </button>
-        <button className={`dashboard-tab ${activeTab === 'applications' ? 'active' : ''}`} onClick={() => setActiveTab('applications')}>
-          📋 Applications {pendingCount > 0 && <span className="tab-badge">{pendingCount}</span>}
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="loading">Loading dashboard...</div>
-      ) : activeTab === 'properties' ? (
-        <div className="dashboard-properties">
-          {properties.length > 0 ? (
-            <table className="properties-table">
-              <thead>
-                <tr><th>Title</th><th>Location</th><th>Price</th><th>Type</th><th>Beds</th><th>Actions</th></tr>
-              </thead>
-              <tbody>
-                {properties.map((property) => (
-                  <tr key={property._id}>
-                    <td>{property.title}</td>
-                    <td>{property.location}</td>
-                    <td>${property.price}/mo</td>
-                    <td>{property.propertyType}</td>
-                    <td>{property.bedrooms}</td>
-                    <td className="action-buttons">
-                      <button className="btn-view" onClick={() => navigate(`/property/${property._id}`)}>View</button>
-                      <button className="btn-edit" onClick={() => navigate(`/edit-property/${property._id}`)}>Edit</button>
-                      <button className="btn-delete" onClick={() => handleDeleteClick(property._id)}>Delete</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="no-properties">
-              <p>You haven't listed any properties yet.</p>
-              <Link to="/create-property" className="btn btn-primary">Add Your First Property</Link>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="applications-management">
-          {applications.length > 0 ? (
-            applications.map((app) => (
-              <div key={app._id} className="app-management-card">
-                <div className="app-management-info">
-                  <h3>{app.applicantName}</h3>
-                  <p className="app-property-name">🏠 {app.propertyTitle}</p>
-                  <div className="app-details-grid">
-                    <span>📧 {app.applicantEmail}</span>
-                    <span>📞 {app.phone}</span>
-                    <span>📅 Move-in: {app.moveInDate}</span>
-                    <span>💼 {app.employmentStatus}</span>
-                    <span>💰 ${app.monthlyIncome}/mo income</span>
-                    <span>👥 {app.occupants} occupant(s)</span>
-                    <span>🐾 Pets: {app.pets}</span>
-                    <span>🗓 Applied: {app.createdAt}</span>
-                  </div>
-                  {app.message && <p className="app-message">💬 "{app.message}"</p>}
-                </div>
-                <div className="app-management-actions">
-                  {getStatusBadge(app.status)}
-                  {app.status === 'pending' && (
-                    <div className="app-action-buttons">
-                      <button className="btn-approve" onClick={() => handleApplicationStatus(app._id, 'approved')}>✅ Approve</button>
-                      <button className="btn-reject" onClick={() => handleApplicationStatus(app._id, 'rejected')}>❌ Reject</button>
+    return (
+        <div style={{ padding: '20px' }}>
+            <h1>Landlord Dashboard</h1>
+            
+            <section>
+                <h2>My Properties ({properties.length})</h2>
+                {properties.length === 0 ? (
+                    <p>No properties yet. Click "Add Property" to create your first listing.</p>
+                ) : (
+                    <div style={{ display: 'grid', gap: '20px', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+                        {properties.map(prop => (
+                            <div key={prop._id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px' }}>
+                                <h3>{prop.title}</h3>
+                                <p>📍 {prop.address}</p>
+                                <p>💰 KES {prop.price}</p>
+                                <p>🛏️ {prop.bedrooms} beds | 🚽 {prop.bathrooms} baths</p>
+                                <p>Status: <span style={{ fontWeight: 'bold', color: prop.status === 'available' ? 'green' : 'orange' }}>
+                                    {prop.status}
+                                </span></p>
+                                <button 
+                                    onClick={() => handleDeleteProperty(prop._id)}
+                                    style={{ backgroundColor: '#ff4444', color: 'white', padding: '5px 10px', marginTop: '10px' }}
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        ))}
                     </div>
-                  )}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="no-applications">
-              <h3>No Applications Yet</h3>
-              <p>Applications from tenants will appear here.</p>
-            </div>
-          )}
+                )}
+            </section>
+
+            <section style={{ marginTop: '40px' }}>
+                <h2>Applications ({applications.length})</h2>
+                {applications.length === 0 ? (
+                    <p>No applications yet.</p>
+                ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ backgroundColor: '#f0f0f0' }}>
+                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Property</th>
+                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Tenant</th>
+                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Move-in Date</th>
+                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Status</th>
+                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {applications.map(app => (
+                                <tr key={app._id}>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{app.property?.title}</td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{app.tenant?.name}</td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{new Date(app.moveInDate).toLocaleDateString()}</td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                        <span style={{ 
+                                            color: app.status === 'approved' ? 'green' : app.status === 'rejected' ? 'red' : 'orange',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            {app.status}
+                                        </span>
+                                    </td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                        {app.status === 'pending' && (
+                                            <div>
+                                                <button 
+                                                    onClick={() => handleStatusUpdate(app._id, 'approved')}
+                                                    style={{ backgroundColor: '#4CAF50', color: 'white', padding: '5px 10px', marginRight: '5px' }}
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleStatusUpdate(app._id, 'rejected')}
+                                                    style={{ backgroundColor: '#ff4444', color: 'white', padding: '5px 10px' }}
+                                                >
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </section>
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default LandlordDashboard;

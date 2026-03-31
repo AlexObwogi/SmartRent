@@ -1,13 +1,13 @@
-const jwt = require('jsonwebtoken');
+﻿const jwt = require('jsonwebtoken');
 
-const protect = (req, res, next) => {
+const auth = (req, res, next) => {
     let token = req.headers.authorization;
 
     if (token && token.startsWith('Bearer')) {
         try {
-            token = token.split(' ')[1]; // Remove 'Bearer' from string
+            token = token.split(' ')[1];
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            req.user = decoded; // Adds user info to the request object
+            req.user = decoded;
             next();
         } catch (error) {
             res.status(401).json({ message: "Not authorized, token failed" });
@@ -17,4 +17,4 @@ const protect = (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+module.exports = auth;

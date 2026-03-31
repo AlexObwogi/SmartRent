@@ -5,315 +5,169 @@ import API from '../services/api';
 const ApplyProperty = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
-
   const [formData, setFormData] = useState({
-    fullName: user?.name || '',
-    email: user?.email || '',
-    phone: '',
     moveInDate: '',
-    employmentStatus: 'employed',
-    monthlyIncome: '',
-    message: '',
-    pets: 'no',
-    occupants: '1',
+    message: ''
   });
-
-  // Sample properties for testing
-  const sampleProperties = [
-    {
-      _id: '1',
-      title: 'Modern Apartment in Westlands',
-      location: 'Westlands, Nairobi',
-      price: 55000,
-      images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400'],
-    },
-    {
-      _id: '2',
-      title: 'Spacious Family Home in Karen',
-      location: 'Karen, Nairobi',
-      price: 120000,
-      images: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400'],
-    },
-    {
-      _id: '3',
-      title: 'Luxury Apartment in Kilimani',
-      location: 'Kutus, Kirinyaga',
-      price: 85000,
-      images: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400'],
-    },
-    {
-      _id: '4',
-      title: 'Studio Apartment in Roysambu',
-      location: 'Roysambu, Nairobi',
-      price: 18000,
-      images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400'],
-    },
-    {
-      _id: '5',
-      title: 'Beachfront Villa in Nyali',
-      location: 'Nyali, Mombasa',
-      price: 150000,
-      images: ['https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=400'],
-    },
-    {
-      _id: '6',
-      title: 'Cozy Cottage in Kutus',
-      location: 'Kilimani, Nairobi',
-      price: 12000,
-      images: ['https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=400'],
-    },
-  ];
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    const fetchProperty = async () => {
-      setLoading(true);
-      try {
-        const response = await API.get(`/properties/${id}`);
-        setProperty(response.data);
-      } catch (err) {
-        const found = sampleProperties.find((p) => p._id === id);
-        setProperty(found || null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProperty();
-    // eslint-disable-next-line
   }, [id]);
+
+  const fetchProperty = async () => {
+    try {
+      setLoading(true);
+      const response = await API.get(`/houses/${id}`);
+      setProperty(response.data);
+    } catch (err) {
+      console.error('Error fetching property:', err);
+      setError('Failed to load property details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.value
     });
-  };
-
-  const validateForm = () => {
-    if (!formData.fullName || !formData.email || !formData.phone) {
-      setError('Name, email, and phone are required');
-      return false;
-    }
-    if (!formData.moveInDate) {
-      setError('Please select a move-in date');
-      return false;
-    }
-    if (!formData.monthlyIncome) {
-      setError('Please enter your monthly income');
-      return false;
-    }
-    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    if (!validateForm()) return;
-
     setSubmitting(true);
+    setError(null);
+    
     try {
-      await API.post('/applications', {
-        propertyId: id,
-        ...formData,
+      await API.post('/bookings', {
+        property: id,
+        moveInDate: formData.moveInDate,
+        message: formData.message
       });
-      setSuccess('Application submitted successfully!');
-      setTimeout(() => navigate('/my-applications'), 2000);
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/my-applications');
+      }, 2000);
     } catch (err) {
-      // Demo mode
-      setSuccess('Application submitted successfully! (Demo Mode)');
-      setTimeout(() => navigate('/properties'), 2000);
+      console.error('Error submitting application:', err);
+      setError(err.response?.data?.message || 'Failed to submit application');
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <div className="loading">Loading property details...</div>;
+  // Helper function to get display location
+  const getDisplayLocation = () => {
+    if (!property) return '';
+    if (property.address) {
+      return property.address;
+    }
+    if (property.location && property.location.coordinates) {
+      return property.location.coordinates[1] + ', ' + property.location.coordinates[0];
+    }
+    return 'Location not specified';
+  };
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', padding: '50px' }}>Loading property details...</div>;
+  }
 
   if (!property) {
     return (
-      <div className="not-found">
+      <div style={{ textAlign: 'center', padding: '50px' }}>
         <h2>Property Not Found</h2>
-        <button onClick={() => navigate('/properties')} className="btn btn-primary">
-          Back to Properties
-        </button>
+        <button onClick={() => navigate('/properties')}>Back to Properties</button>
       </div>
     );
   }
 
   return (
-    <div className="apply-page">
-      <div className="apply-container">
-        {/* Property Summary */}
-        <div className="apply-property-summary">
-          <img
-            src={
-              property.images && property.images.length > 0
-                ? property.images[0]
-                : 'https://via.placeholder.com/100x100?text=No+Image'
-            }
-            alt={property.title}
-          />
-          <div className="apply-property-info">
-            <h3>{property.title}</h3>
-            <p>📍 {property.location}</p>
-            <p className="apply-price">${property.price}/month</p>
-          </div>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+      <h1>Apply for Property</h1>
+      
+      {success && (
+        <div style={{ backgroundColor: '#d4edda', color: '#155724', padding: '10px', borderRadius: '4px', marginBottom: '20px' }}>
+          Application submitted successfully! Redirecting...
         </div>
-
-        {/* Application Form */}
-        <div className="apply-form-card">
-          <h2>📝 Rental Application</h2>
-          <p className="apply-subtitle">
-            Fill out the form below to apply for this property
-          </p>
-
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
-
-          <form onSubmit={handleSubmit}>
-            <div className="form-section-title">Personal Information</div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Full Name *</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Your full name"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Email *</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Your email"
-                  required
-                />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Phone *</label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="Your phone number"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Desired Move-in Date *</label>
-                <input
-                  type="date"
-                  name="moveInDate"
-                  value={formData.moveInDate}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-section-title">Employment & Income</div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Employment Status</label>
-                <select
-                  name="employmentStatus"
-                  value={formData.employmentStatus}
-                  onChange={handleChange}
-                >
-                  <option value="employed">Employed</option>
-                  <option value="self-employed">Self-Employed</option>
-                  <option value="student">Student</option>
-                  <option value="retired">Retired</option>
-                  <option value="unemployed">Unemployed</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Monthly Income ($) *</label>
-                <input
-                  type="number"
-                  name="monthlyIncome"
-                  value={formData.monthlyIncome}
-                  onChange={handleChange}
-                  placeholder="e.g. 5000"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-section-title">Additional Details</div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Number of Occupants</label>
-                <select
-                  name="occupants"
-                  value={formData.occupants}
-                  onChange={handleChange}
-                >
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5+">5+</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Do You Have Pets?</label>
-                <select
-                  name="pets"
-                  value={formData.pets}
-                  onChange={handleChange}
-                >
-                  <option value="no">No</option>
-                  <option value="cat">Yes - Cat</option>
-                  <option value="dog">Yes - Dog</option>
-                  <option value="other">Yes - Other</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Message to Landlord</label>
-              <textarea
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                placeholder="Tell the landlord why you'd be a great tenant..."
-                rows="4"
-              />
-            </div>
-
-            <div className="form-buttons">
-              <button type="submit" disabled={submitting}>
-                {submitting ? 'Submitting...' : '📨 Submit Application'}
-              </button>
-              <button
-                type="button"
-                className="btn-cancel"
-                onClick={() => navigate(`/property/${id}`)}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+      )}
+      
+      {error && (
+        <div style={{ backgroundColor: '#f8d7da', color: '#721c24', padding: '10px', borderRadius: '4px', marginBottom: '20px' }}>
+          {error}
         </div>
+      )}
+      
+      <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '20px', marginBottom: '20px' }}>
+        <h2>{property.title}</h2>
+        <p><strong>Location:</strong> {getDisplayLocation()}</p>
+        <p><strong>Price:</strong> KES {property.price?.toLocaleString()}/month</p>
+        <p><strong>Bedrooms:</strong> {property.bedrooms}</p>
+        <p><strong>Bathrooms:</strong> {property.bathrooms}</p>
+        <p><strong>Description:</strong> {property.description}</p>
       </div>
+      
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Preferred Move-in Date *</label>
+          <input
+            type="date"
+            name="moveInDate"
+            value={formData.moveInDate}
+            onChange={handleChange}
+            required
+            style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+          />
+        </div>
+        
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Message to Landlord</label>
+          <textarea
+            name="message"
+            value={formData.message}
+            onChange={handleChange}
+            rows="4"
+            placeholder="Tell the landlord about yourself and why you're interested in this property..."
+            style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+          />
+        </div>
+        
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: submitting ? '#ccc' : '#4CAF50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: submitting ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {submitting ? 'Submitting...' : 'Submit Application'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate(`/property/${id}`)}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#666',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
