@@ -18,31 +18,30 @@ const PropertyDetail = () => {
   const isOwner = user && property && (user.role === 'admin' || user.id === property.landlord?._id || user.id === property.landlord);
 
   useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        
+        // Fetch property details
+        const propertyRes = await API.get(`/houses/${id}`, {
+          headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+        });
+        setProperty(propertyRes.data);
+        
+        // Fetch media (images and videos)
+        await fetchMedia();
+        
+        setSaved(await isPropertySaved(id));
+      } catch (err) {
+        console.error('Error fetching property:', err);
+        setProperty(null);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchData();
-  }, [id]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Fetch property details
-      const propertyRes = await API.get(`/houses/${id}`, {
-        headers: { 'Authorization': token ? `Bearer ${token}` : '' }
-      });
-      setProperty(propertyRes.data);
-      
-      // Fetch media (images and videos)
-      await fetchMedia();
-      
-      setSaved(await isPropertySaved(id));
-    } catch (err) {
-      console.error('Error fetching property:', err);
-      setProperty(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [id]); // Added id as dependency
 
   const fetchMedia = async () => {
     try {
@@ -155,9 +154,6 @@ const PropertyDetail = () => {
   // Also check property.images array
   const propertyImages = property?.images?.filter(img => !img.includes('cloudinary.com/demo')) || [];
   const allImages = [...propertyImages, ...images.map(i => i.url)];
-  
-  // Get video URL from media or property
-  const videoUrl = videos.length > 0 ? videos[0].url : (property?.videoUrl || null);
 
   if (loading) return <div className="loading">Loading property details...</div>;
 
