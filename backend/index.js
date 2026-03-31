@@ -17,12 +17,17 @@ const mediaRoutes = require('./routes/mediaRoutes');
 const chatbotRoutes = require('./routes/chatbotRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const savedRoutes = require('./routes/savedRoutes');
-const landlordRoutes = require('./routes/landlordRoutes');  // ADD THIS LINE
+const landlordRoutes = require('./routes/landlordRoutes');
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Middleware - FIXED CORS FOR MOBILE ACCESS
+app.use(cors({
+    origin: '*', // Allow all origins (for mobile and other devices)
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json()); 
 
 // Connect to MongoDB
@@ -41,7 +46,7 @@ app.use('/api/mpesa', mpesaRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/saved', savedRoutes);
-app.use('/api/landlord', landlordRoutes);  // This line now works
+app.use('/api/landlord', landlordRoutes);
 
 // Database Routes
 app.use('/api/bookings', bookingRoutes);
