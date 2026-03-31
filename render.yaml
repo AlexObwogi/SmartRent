@@ -1,0 +1,32 @@
+﻿services:
+  # Backend API Service
+  - type: web
+    name: smartrent-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.14.0
+      - key: MONGODB_URI
+        value: mongodb+srv://Alex:Alexn2004@smartrent.oovexvx.mongodb.net/smartrent?retryWrites=true&w=majority
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLOUDINARY_CLOUD_NAME
+        value: ds1vb8nwe
+      - key: CLOUDINARY_API_KEY
+        value: 813377962642481
+      - key: CLOUDINARY_API_SECRET
+        value: a1GP4PtANLoa3R_d5K7ccxFr-V8
+
+  # Frontend Static Site
+  - type: web
+    name: smartrent-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://smartrent-backend.onrender.com/api
