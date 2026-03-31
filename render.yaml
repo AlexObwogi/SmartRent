@@ -7,8 +7,6 @@
     buildCommand: npm install --legacy-peer-deps
     startCommand: npm start
     envVars:
-      - key: NODE_VERSION
-        value: 20.14.0
       - key: MONGODB_URI
         value: mongodb+srv://Alex:Alexn2004@smartrent.oovexvx.mongodb.net/smartrent?retryWrites=true&w=majority
       - key: JWT_SECRET
@@ -26,6 +24,7 @@
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: build
+    publish: build
     routes:
       - type: rewrite
         source: /*
