@@ -1,12 +1,12 @@
 ﻿import axios from 'axios';
 
-// Get API URL from environment or use production URL
+// Dynamically determine API URL based on environment
 const getApiUrl = () => {
-  // For production (Render)
-  if (window.location.hostname !== 'localhost') {
+  // Production (Render/Netlify/Vercel)
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
     return 'https://smartrent-backend.onrender.com/api';
   }
-  // For local development
+  // Local development
   return 'http://localhost:5000/api';
 };
 
@@ -14,7 +14,7 @@ const API = axios.create({
   baseURL: getApiUrl(),
 });
 
-// This automatically attaches the login token to every request
+// Automatically attach token to requests
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
