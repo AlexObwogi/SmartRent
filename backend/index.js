@@ -30,16 +30,26 @@ app.use(cors({
 }));
 app.use(express.json()); 
 
-// Connect to MongoDB with improved options
-mongoose.connect(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 10000,
-    socketTimeoutMS: 45000,
-    family: 4,
-    retryWrites: true,
-    w: 'majority'
-})
-.then(() => console.log("Success: Connected to MongoDB!"))
-.catch((err) => console.log("Error connecting to Mongo:", err.message));
+// Connect to MongoDB with robust options
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI, {
+            serverSelectionTimeoutMS: 30000,
+            socketTimeoutMS: 45000,
+            connectTimeoutMS: 30000,
+            family: 4,
+            retryWrites: true,
+            w: 'majority'
+        });
+        console.log("Success: Connected to MongoDB!");
+    } catch (err) {
+        console.log("Error connecting to Mongo:", err.message);
+        // Retry after 5 seconds
+        setTimeout(connectDB, 5000);
+    }
+};
+
+connectDB();
 
 // Routes
 app.get('/', (req, res) => {
