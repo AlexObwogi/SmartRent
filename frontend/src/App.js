@@ -16,7 +16,9 @@ import ApplyProperty from './pages/ApplyProperty';
 import MyApplications from './pages/MyApplications';
 import SavedProperties from './pages/SavedProperties';
 import NotFound from './pages/NotFound';
-import MyProperties from './pages/MyProperties';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminRoute from './components/AdminRoute';
+import Chatbot from './components/Chatbot';
 import './App.css';
 
 function App() {
@@ -87,18 +89,19 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="*" element={<NotFound />} />
             <Route
-              path="/my-properties"
+              path="/admin"
               element={
-                <ProtectedRoute>
-                  <MyProperties />
-                </ProtectedRoute>
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
               }
             />
-            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         <Footer />
+        <Chatbot />
       </div>
     </Router>
   );
