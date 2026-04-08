@@ -4,18 +4,29 @@ console.log('API URL:', API_URL); // This will help debug
 
 export const register = async (userData) => {
   try {
+    // Map frontend fields to backend expected fields
+    const backendData = {
+      name: userData.fullName,     // Convert fullName to name
+      email: userData.email,
+      password: userData.password,
+      role: userData.role || 'tenant'
+    };
+    
+    console.log('Sending to backend:', backendData); // Debug log
+    
     const response = await fetch(`${API_URL}/users/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(userData)
+      body: JSON.stringify(backendData)  // Send mapped data
     });
     
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Registration failed');
+      // Show the actual error message from backend
+      throw new Error(data.message || data.error || 'Registration failed');
     }
 
     // Save token if received
@@ -44,7 +55,7 @@ export const login = async (credentials) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Login failed');     
+      throw new Error(data.message || data.error || 'Login failed');     
     }
 
     // Save token and user data
