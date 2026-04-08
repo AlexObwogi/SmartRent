@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { registerUser } from '../services/authService';
-import { useNavigate } from 'react-router-dom';
+import { register } from '../services/authService';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',  // Changed from 'name' to 'fullName' to match backend
     email: '',
     password: '',
     confirmPassword: '',
@@ -22,7 +22,7 @@ const Register = () => {
   };
 
   const validateForm = () => {
-    if (!formData.name || !formData.email || !formData.password) {
+    if (!formData.fullName || !formData.email || !formData.password) {
       setError('All fields are required');
       return false;
     }
@@ -40,18 +40,31 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (!validateForm()) return;
-
     setLoading(true);
+
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const { confirmPassword, ...submitData } = formData;
-      await registerUser(submitData);
-      navigate('/login');
+      console.log('Submitting registration:', submitData); // Debug log
+      
+      const response = await register(submitData);
+      console.log('Registration response:', response); // Debug log
+      
+      if (response && response.token) {
+        // Save token if returned
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        navigate('/properties'); // Redirect to properties page
+      } else {
+        navigate('/login'); // Redirect to login if no token
+      }
     } catch (err) {
-      setError(
-        err.response?.data?.message || 'Registration failed.'
-      );
+      console.error('Registration error details:', err);
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -67,8 +80,8 @@ const Register = () => {
             <label>Full Name</label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
+              name="fullName"  // Changed from 'name' to 'fullName'
+              value={formData.fullName}
               onChange={handleChange}
               placeholder="Enter your full name"
               required
@@ -124,7 +137,7 @@ const Register = () => {
         </form>
         <p className="auth-link">
           Already have an account?{' '}
-          <a href="/login">Login here</a>
+          <Link to="/login">Login here</Link>
         </p>
       </div>
     </div>

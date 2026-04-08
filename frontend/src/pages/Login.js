@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { loginUser } from '../services/authService';
-import { useNavigate } from 'react-router-dom';
+import { login } from '../services/authService';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -39,13 +39,15 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const data = await loginUser(formData);
+      // FIXED: Changed loginUser to login
+      const data = await login(formData);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('userRole', data.user?.role || 'tenant');
       navigate('/properties');
     } catch (err) {
       setError(
-        err.response?.data?.message || 'Login failed. Please try again.'
+        err.message || 'Login failed. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -86,7 +88,7 @@ const Login = () => {
         </form>
         <p className="auth-link">
           Don't have an account?{' '}
-          <a href="/register">Register here</a>
+          <Link to="/register">Register here</Link>
         </p>
       </div>
     </div>
