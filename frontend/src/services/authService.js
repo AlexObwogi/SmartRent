@@ -4,7 +4,7 @@ console.log('API URL:', API_URL); // This will help debug
 
 export const register = async (userData) => {
   try {
-    const response = await fetch(`${API_URL}/auth/register`, {
+    const response = await fetch(`${API_URL}/users/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -13,17 +13,17 @@ export const register = async (userData) => {
     });
     
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.error || 'Registration failed');
     }
-    
+
     // Save token if received
     if (data.token) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
     }
-    
+
     return data;
   } catch (error) {
     console.error('Registration error:', error);
@@ -33,27 +33,27 @@ export const register = async (userData) => {
 
 export const login = async (credentials) => {
   try {
-    const response = await fetch(`${API_URL}/auth/login`, {
+    const response = await fetch(`${API_URL}/users/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(credentials)
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
-      throw new Error(data.error || 'Login failed');
+      throw new Error(data.error || 'Login failed');     
     }
-    
+
     // Save token and user data
     if (data.token) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('userRole', data.user.role);
+      localStorage.setItem('userRole', data.user.role);  
     }
-    
+
     return data;
   } catch (error) {
     console.error('Login error:', error);
